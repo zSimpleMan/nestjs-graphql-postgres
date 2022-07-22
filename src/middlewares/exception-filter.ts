@@ -15,6 +15,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const { httpAdapter } = this.httpAdapterHost;
 
     console.log(exception)
+
+    if (host.getType() !== 'http') {
+      throw exception;
+    }
   
     const ctx = host.switchToHttp();
 
