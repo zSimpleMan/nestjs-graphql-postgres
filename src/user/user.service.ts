@@ -18,30 +18,22 @@ export class UserService extends BaseService<User> {
     super(userRepository)
   }
   
-  async findAll (): Promise<User[]> {
-    const where = {
-      'user.fullName': 'luu nhat han',
-      $and: [
-        {
-          $not_in: {
-            'user.email': ['nhathantl@gmail.com', 'nhathanluu456@gmail.com']
-          }
-        },
-        {
-          $not: {
-            'user.id': 1
-          }
-        },
-        {
-          $ilike: {
-            'user.email': '%mh%'
-          }
-        }
-      ]
+  async findOrPaginate (criterials): Promise<any> {
+
+    const data = await super.findAll(criterials)
+
+    if (criterials.limit || criterials.page) {
+      const paginate = {
+        page: criterials.page,
+        limit: criterials.limit,
+        total: data.length
+      }
+
+      return {
+        data,
+        paginate
+      }
     }
-    const data = await this.userRepository.createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'roles')
-      .getMany()
 
     return data
   }

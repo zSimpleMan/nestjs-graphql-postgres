@@ -2,235 +2,65 @@ import { BadRequestException } from "@nestjs/common";
 import { isArray, isString } from "class-validator";
 import { Brackets, SelectQueryBuilder, WhereExpressionBuilder } from "typeorm";
 
-/* 
-  {
-    select: [
-      "role.roleId",
-      "role.roleName"
-    ],
-    joins: [
-      {
-        leftJoin: {
-          relation: "user.userRoles",
-          alias: "userrole",
-          where:
-        }
-      },
-      {
-        leftJoin: {
-          relation: "role.userRoles",
-          alias: "role",
-        }
-      }
-    ],
-    where: {
-      
-    },
-    groupBy: [],
-    orderBY: []
-  }
-*/
-
 export enum Operator {
-  AND = '$AND',
-  OR = '$OR',
+  AND = 'and',
+  OR = 'or',
 }
 
-export enum JoinType {
-  LEFT_JOIN = 'left join',
-  INNER_JOIN = 'inner join',
-}
-
-export interface IJoinOption {
-  type: JoinType,
-  relation: string,
-  alias: string,
-  where?: any
-}
-
-export interface IOrderBy {
-  field: string,
-  order: 'ASC' | 'DESC'
-}
-
-export interface ICriterial {
-  select?: string[],
-  joins: IJoinOption[],
-  where?: any,
-  groupBy?: string[],
-  orderBy?: any,
-  having?: any,
-  take?: number,
-  offset?: number
-}
 
 export class QueryParser <T>{
 
-  parser (query: SelectQueryBuilder<T>, criterials: ICriterial) {
-    query = this.joinParser(query, criterials.joins)
-    query = this.whereParser(query, criterials.where)
+  private alias: string
+
+  parser (query: SelectQueryBuilder<T>, criterials: any) {
+    this.alias = query.alias
+    if (criterials.relations) {
+      query = this.relationParser(criterials.relations, query)
+    }
+
+    if (criterials.where) {
+      query = this.whereParser(criterials.where, query)
+    }
+
+    if (criterials.orderBy) {
+      query = this.sortParser(criterials.orderBy, query)
+    }
+
+    if (criterials.limit || criterials.page) {
+      query = this.paginate(criterials.page, criterials.limit, query)
+    }
 
     return query
   }
 
-  selectParser (query: SelectQueryBuilder<T>, select: string []) {
-    if (!select) { return query }
-    query = query.select(select)
-  }
-
-  joinParser (query: SelectQueryBuilder<T>, join: IJoinOption[]) {
-    if (!isArray(join)) {
-      throw new BadRequestException('Invalid criterial!')
-    }
-    join.map(el => {
-      const { type, relation, alias, where = {} } = el
-
-      if (!type || !relation || !alias) {
-        throw new BadRequestException('Invalid Criterials!')
-      }
-
-      let str = ''
-      str = this.whereJoinParser(str, where)
-
-      switch (type) {
-        case JoinType.LEFT_JOIN:
-          query.leftJoinAndSelect(relation, alias, str)
-          break
-        case JoinType.INNER_JOIN:
-          query.innerJoinAndSelect(relation, alias, str)
-        default: break
-      }
+  relationParser (relations: string[], query: SelectQueryBuilder<T>) {
+    relations.map(i => {
+      query.leftJoinAndSelect(this.alias + '.' + i, i)
     })
 
     return query
   }
-
-  whereJoinParser (
-    str: string,
-    where: any,
-    parentOperator = '$AND'
-  ): string {
-    if (!where) {
-      return ''
-    }
-
-    Object.keys(where).forEach(key => {
-      if (key.toUpperCase() === Operator.AND) {
-        str = this.whereJoinParser(str, where[key], Operator.AND)
-      } else if (key.toUpperCase() === Operator.OR) {
-        str = this.whereJoinParser(str, where[key], Operator.OR)
-      } else {
-        const setWhere = {}
-        setWhere[key] = where[key]
-        str = this.handleWhereJoinArgs(str, setWhere, <Operator>parentOperator)
-      }
-    })
-
-    return str
-  }
-
-  handleWhereJoinArgs (str: string, where: any, andOr: Operator) {
-    Object.entries(where).map(item => {
-      const [ Operator, filter ] = item
-
-      let op = str === '' ? '' : andOr
-    
-      switch (Operator) {
-        case '$in': {
-          const [ field, arr ] = Object.entries(filter)[0]
-          str += `${op} ${field} IN (${this.getValue(arr)})`
-          break
-        }
-
-        case '$not': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} NOT (${this.getValue(value)})`
-          break
-        }
-
-        case '$not_in': {
-          const [ field, arr ] = Object.entries(filter)[0]
-          str += `${op} ${field} NOT IN (${this.getValue(arr)})`
-          break
-        }
-
-        case '$lt': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} < (${this.getValue(value)})`
-          break
-        }
-
-        case '$lte': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} <= (${this.getValue(value)})`
-          break
-        }
-
-        case '$gt': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} > (${this.getValue(value)})`
-          break
-        }
-
-        case '$gte': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} >= (${this.getValue(value)})`
-          break
-        }
-
-        case '$ilike': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} ILIKE (${this.getValue(value)})`
-          break
-        }
-
-        case '$not_ilike': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} NOT ILIKE (${this.getValue(value)})`
-          break
-        }
-
-        case '$like': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} LIKE (${this.getValue(value)})`
-          break
-        }
-
-        case '$not_like': {
-          const [ field, value ] = Object.entries(filter)[0]
-          str += `${op} ${field} NOT LIKE (${this.getValue(value)})`
-          break
-        }
-
-        default:
-          str += `${op} ${Operator} = (${this.getValue(filter)})`
-          break
-      }
-    })
-    return str
-  }
-
 
   whereParser (
-    query: SelectQueryBuilder<T> | WhereExpressionBuilder,
     where: any,
-    parentOperator = '$AND'
+    query: SelectQueryBuilder<T> | WhereExpressionBuilder,
+    parentOperator = 'and'
   ): SelectQueryBuilder<T> {
     if (!where) {
       return query as SelectQueryBuilder<T>
     }
 
     Object.keys(where).forEach(key => {
-      if (key.toUpperCase() === Operator.AND) {
+      if (key === Operator.AND) {
         query = query.andWhere(new Brackets(qb => 
           where[key].map(arr => {
-            this.whereParser(qb, arr, Operator.AND)
+            this.whereParser(arr, qb, Operator.AND)
           })
         ))
-      } else if (key.toUpperCase() === Operator.OR) {
+      } else if (key === Operator.OR) {
         query = query.orWhere(new Brackets(qb => 
           where[key].map(arr => {
-            this.whereParser(qb, arr, Operator.OR)
+            this.whereParser(arr, qb, Operator.OR)
           })
         ))
       } else {
@@ -245,77 +75,65 @@ export class QueryParser <T>{
 
   handleWhereArgs (query: WhereExpressionBuilder, where: any, andOr: 'andWhere' | 'orWhere') {
     Object.entries(where).map(item => {
-      const [ Operator, filter ] = item
+      const [ operator, filter ] = item
     
-      switch (Operator) {
-        case '$in': {
+      switch (operator) {
+        case 'in': {
           const [ field, arr ] = Object.entries(filter)[0]
-          query[andOr](`${field} IN (${this.getValue(arr)})`)
+          query[andOr](`${this.getField(field)} IN (${this.getValue(arr)})`)
           break
         }
 
-        case '$not': {
+        case 'not': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} != ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} != ${this.getValue(value)}`)
           break
         }
 
-        case '$not_in': {
+        case 'nin': {
           const [ field, arr ] = Object.entries(filter)[0]
-          query[andOr](`${field} NOT IN (${this.getValue(arr)})`)
+          query[andOr](`${this.getField(field)} NOT IN (${this.getValue(arr)})`)
           break
         }
 
-        case '$lt': {
+        case 'lt': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} < ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} < ${this.getValue(value)}`)
           break
         }
 
-        case '$lte': {
+        case 'lte': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} <= ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} <= ${this.getValue(value)}`)
           break
         }
 
-        case '$gt': {
+        case 'gt': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} > ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} > ${this.getValue(value)}`)
           break
         }
 
-        case '$gte': {
+        case 'gte': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} >= ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} >= ${this.getValue(value)}`)
           break
         }
 
-        case '$ilike': {
+        case 'il': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} ILIKE ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} ILIKE ${this.getValue(value)}`)
           break
         }
 
-        case '$not_ilike': {
+        case 'nil': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} NOT ILIKE ${this.getValue(value)}`)
-          break
-        }
-
-        case '$like': {
-          const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} LIKE ${this.getValue(value)}`)
-          break
-        }
-
-        case '$not_like': {
-          const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${field} NOT LIKE ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field)} NOT ILIKE ${this.getValue(value)}`)
           break
         }
 
         default:
-          query[andOr](`${Operator} = ${this.getValue(filter)}`)
+          query[andOr](`${this.getField(operator)} = ${this.getValue(filter)}`)
           break
       }
     })
@@ -336,5 +154,32 @@ export class QueryParser <T>{
     }
 
     return value
+  }
+
+  getField (field: string): string {
+    const str = field.split('_')
+    if (str.length === 2) {
+      return str[0] + '.' + str[1]
+    }
+
+    return this.alias + '.' + str[0]
+  }
+
+  sortParser (sort: any, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
+    sort.map(i => {
+      const [field, value] = Object(i).entries[0]
+      query.addOrderBy(this.getField(field), value)
+    })
+
+    return query
+  }
+
+  paginate (page: number, limit: number, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
+    page = page ? page : 0
+    limit = limit ? limit : 10
+    
+    query.skip(limit*page).take(limit)
+
+    return query
   }
 }

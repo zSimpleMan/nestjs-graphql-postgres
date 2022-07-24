@@ -3,6 +3,7 @@ import { Args, Query, Resolver } from '@nestjs/graphql';
 import { JwtAuth, JwtGraphqlAuth } from 'src/authentication/jwt-authentication.guard';
 import { IFindOptions } from 'src/shared/interfaces';
 import { User } from './entity/user.entity';
+import { PaginateModel } from './models/user.model';
 import { Filter } from './type/where.type';
 import { UserService } from './user.service';
  
@@ -14,9 +15,17 @@ export class UserResolver {
  
   // @UseGuards(JwtGraphqlAuth)
   @Query(() => [User])
-  async find(@Args('filter') filter: Filter) {
-    console.log(filter)
-    const data = await this.userService.findAll()
+  async findUser (@Args('filter') filter: Filter) {
+    const data = await this.userService.findOrPaginate(filter)
+
     return data
   }
+
+  @Query(() => PaginateModel)
+  async paginate (@Args('filter') filter: Filter) {
+    const data = await this.userService.findOrPaginate(filter)
+
+    return data
+  }
+  
 }

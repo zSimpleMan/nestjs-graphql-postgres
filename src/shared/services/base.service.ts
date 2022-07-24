@@ -12,7 +12,7 @@ export class BaseService <TEntity> {
 
   async exec (criterials) {
     let query = this.repository.createQueryBuilder(this.alias)
-    query = this.queryParser.whereParser(query, criterials)
+    query = this.queryParser.parser(query, criterials)
     
     return query
   }

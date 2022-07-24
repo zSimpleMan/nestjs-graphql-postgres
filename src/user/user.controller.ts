@@ -27,6 +27,6 @@ export class UserController {
 
   @Get()
   async findAll (@Param() params) {
-    return this.userService.findAll()
+    return this.userService.findAll({})
   }
 }
