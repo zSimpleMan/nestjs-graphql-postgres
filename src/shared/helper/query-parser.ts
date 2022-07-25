@@ -73,67 +73,75 @@ export class QueryParser <T>{
     return query as SelectQueryBuilder<T>
   }
 
-  handleWhereArgs (query: WhereExpressionBuilder, where: any, andOr: 'andWhere' | 'orWhere') {
+  handleWhereArgs (query: WhereExpressionBuilder, where: any, andOr: 'andWhere' | 'orWhere', alias?: string) {
+    if (!alias) {
+       alias = this.alias
+    }
+
     Object.entries(where).map(item => {
       const [ operator, filter ] = item
     
       switch (operator) {
         case 'in': {
           const [ field, arr ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} IN (${this.getValue(arr)})`)
+          query[andOr](`${this.getField(field, alias)} IN (${this.getValue(arr)})`)
           break
         }
 
         case 'not': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} != ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} != ${this.getValue(value)}`)
           break
         }
 
         case 'nin': {
           const [ field, arr ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} NOT IN (${this.getValue(arr)})`)
+          query[andOr](`${this.getField(field, alias)} NOT IN (${this.getValue(arr)})`)
           break
         }
 
         case 'lt': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} < ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} < ${this.getValue(value)}`)
           break
         }
 
         case 'lte': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} <= ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} <= ${this.getValue(value)}`)
           break
         }
 
         case 'gt': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} > ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} > ${this.getValue(value)}`)
           break
         }
 
         case 'gte': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} >= ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} >= ${this.getValue(value)}`)
           break
         }
 
         case 'il': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} ILIKE ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} ILIKE ${this.getValue(value)}`)
           break
         }
 
         case 'nil': {
           const [ field, value ] = Object.entries(filter)[0]
-          query[andOr](`${this.getField(field)} NOT ILIKE ${this.getValue(value)}`)
+          query[andOr](`${this.getField(field, alias)} NOT ILIKE ${this.getValue(value)}`)
           break
         }
 
         default:
-          query[andOr](`${this.getField(operator)} = ${this.getValue(filter)}`)
+          if (typeof filter === 'object') {
+            query = this.handleWhereArgs(query, where[operator], andOr, operator)
+          } else {
+            query[andOr](`${this.getField(operator, alias)} = ${this.getValue(filter)}`)
+          }
           break
       }
     })
@@ -156,19 +164,13 @@ export class QueryParser <T>{
     return value
   }
 
-  getField (field: string): string {
-    const str = field.split('_')
-    if (str.length === 2) {
-      return str[0] + '.' + str[1]
-    }
-
-    return this.alias + '.' + str[0]
+  getField (field: string, alias: string): string {
+    return alias + '.' + field
   }
 
   sortParser (sort: any, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
-    sort.map(i => {
-      const [field, value] = Object(i).entries[0]
-      query.addOrderBy(this.getField(field), value)
+    Object.keys(sort).map(i => {
+      query.addOrderBy(this.getField(i, this.alias), sort[i])
     })
 
     return query

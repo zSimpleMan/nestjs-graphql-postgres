@@ -3,7 +3,7 @@ import { QueryParser } from "../helper/query-parser";
 
 export class BaseService <TEntity> {
   private repository: Repository<TEntity>
-  private queryParser: QueryParser<TEntity>
+  public queryParser: QueryParser<TEntity>
   protected alias
   constructor (repository) {
     this.repository = repository

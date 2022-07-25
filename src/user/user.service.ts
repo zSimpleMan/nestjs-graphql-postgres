@@ -50,4 +50,14 @@ export class UserService extends BaseService<User> {
       email
     })
   }
+
+  async findUser (criterials: any) {
+    let query = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'roles')
+    query = this.queryParser.parser(query, criterials)
+
+    const data = await query.getMany()
+
+    return data
+  }
 }
