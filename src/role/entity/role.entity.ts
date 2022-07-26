@@ -1,6 +1,7 @@
 import { Field, ObjectType } from "@nestjs/graphql";
+import { Test } from "src/test/entity/test.entity";
 import { User } from "src/user/entity/user.entity";
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity({
   name: 'roles'
@@ -25,4 +26,8 @@ export class Role {
   @Field()
   updatedAt: Date
 
+  @OneToMany(() => Test, (test) => test.role)
+  @JoinColumn({ name: 'role_id' })
+  @Field(type => [Test])
+  tests: Test[]
 }

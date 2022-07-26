@@ -88,7 +88,7 @@ export class QueryParser <T>{
           break
         }
 
-        case 'not': {
+        case 'ne': {
           const [ field, value ] = Object.entries(filter)[0]
           query[andOr](`${this.getField(field, alias)} != ${this.getValue(value)}`)
           break
@@ -168,9 +168,22 @@ export class QueryParser <T>{
     return alias + '.' + field
   }
 
-  sortParser (sort: any, query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
-    Object.keys(sort).map(i => {
-      query.addOrderBy(this.getField(i, this.alias), sort[i])
+  sortParser (sort: any, query: SelectQueryBuilder<T>, alias?:string): SelectQueryBuilder<T> {
+    if (!alias) {
+      alias = this.alias
+    }
+    sort.map(i => {
+      if (isString(i)) {
+        query.addOrderBy(this.getField(i, alias), 'ASC')
+      } else {
+        Object.keys(i).map(x => {
+          if (isString(i[x])) {
+            query.addOrderBy(this.getField(x, alias), i[x])
+          } else {
+             query = this.sortParser(i[x], query, x)
+          }
+        })
+      }
     })
 
     return query

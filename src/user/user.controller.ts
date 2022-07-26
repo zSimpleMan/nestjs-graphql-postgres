@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Query, Post, UseGuards, Req, UseInterceptors, Param } from "@nestjs/common";
+import { Body, Controller, Get, Query, Post, UseGuards, Req, UseInterceptors, Param, BadRequestException } from "@nestjs/common";
 import { JwtAuth } from "src/authentication/jwt-authentication.guard";
 // import { JwtAuth } from "src/authentication/jwt-authentication.guard";
 import { TransactionInterceptor } from "src/middlewares/interceptor";
@@ -7,7 +7,6 @@ import { QueryRunner } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserService } from "./user.service";
 
-@UseGuards(JwtAuth)
 @Controller('user')
 export class UserController {
   constructor (
@@ -17,7 +16,9 @@ export class UserController {
   @UseInterceptors(TransactionInterceptor)
   @Post()
   async create (@Body() user: CreateUserDto, @RequestItem('queryRunner') queryRunner: QueryRunner) {
-    return this.userService.create(user, queryRunner)
+    const dt = await this.userService.create(user, queryRunner)
+    
+    return dt
   }
 
   @Get('/email')
