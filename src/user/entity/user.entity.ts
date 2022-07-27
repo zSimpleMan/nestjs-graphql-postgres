@@ -1,53 +1,86 @@
 import { Field, ObjectType } from "@nestjs/graphql";
-import { Role } from "src/role/entity/role.entity";
-// import { UserRole } from "src/user-role/entity/user-role.entity";
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Department } from "src/department/entity/department.entity";
+import { BaseEntity } from "src/shared/base-entity/base.entity";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity({
-  name: 'users'
+  name: 'crm_users'
 })
 @ObjectType()
-export class User {
-  @PrimaryGeneratedColumn()
+export class User extends BaseEntity {
   @Field()
+  @Column({
+    primary: true
+  })
   id: number
 
-  @Column({ unique: true })
   @Field()
+  @Column({
+    unique: true
+  })
+  username: string
+
+  @Field()
+  @Column({
+    unique: true
+  })
   email: string
 
   @Column()
-  @Field()
   password: string
 
-  @Column({ name: 'full_name' })
-  @Field()
-  fullName: string
-
-  @Column()
-  @Field()
-  birthday: Date
-  
-  @Column({ name: 'created_at' })
-  @Field()
-  createdAt: Date
-
-  @Column({ name: 'updated_at' })
-  @Field()
-  updatedAt: Date
-
-  @ManyToMany(type => Role)
-  @JoinTable({
-    name: 'user_roles',
-    joinColumn: {
-      name: 'user_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'role_id',
-      referencedColumnName: 'id'
-    }
+  @Field({
+    nullable: true
   })
-  @Field(type => [Role])
-  roles: Role[]
+  @Column({
+    name: 'first_name'
+  })
+  firstName: string
+
+  @Field({
+    nullable: true
+  })
+  @Column({
+    name: 'last_name'
+  })
+  lastName: string
+
+  @Field({
+    nullable: true
+  })
+  @Column({
+    name: 'last_login'
+  })
+  lastLogin: Date
+
+  @Field({
+    nullable: true
+  })
+  @Column({
+    name: 'last_activity'
+  })
+  lastActivity: string
+
+  @Field({
+    nullable: true
+  })
+  @Column({
+    name: 'last_ip'
+  })
+  lastIp: string
+
+  @Field({
+    nullable: true
+  })
+  @Column()
+  avatar: string
+
+  @Field({
+    nullable: true
+  })
+  @ManyToOne(() => Department, x => x.users)
+  @JoinColumn({
+    name: 'department_id'
+  })
+  department: Department
 }

@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { QueryRunner, Repository } from "typeorm";
 import { QueryParser } from "../helper/query-parser";
 
 export class BaseService <TEntity> {
@@ -11,7 +11,7 @@ export class BaseService <TEntity> {
   }
 
   async exec (criterials) {
-    let query = this.repository.createQueryBuilder(this.alias)
+    let query = this.repository.createQueryBuilder('xaxa')
     query = this.queryParser.parser(query, criterials)
     
     return query
@@ -29,5 +29,13 @@ export class BaseService <TEntity> {
     const data = query.getOne()
 
     return data
+  }
+
+  async create (data: any, queryRunner: QueryRunner): Promise<TEntity> {
+    const row = this.repository.create(<TEntity>data)
+
+    await queryRunner.manager.save(row)
+
+    return row
   }
 }

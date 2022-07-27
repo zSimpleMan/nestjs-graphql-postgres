@@ -180,7 +180,7 @@ export class QueryParser <T>{
           if (isString(i[x])) {
             query.addOrderBy(this.getField(x, alias), i[x])
           } else {
-             query = this.sortParser(i[x], query, x)
+            query = this.sortParser(i[x], query, x)
           }
         })
       }

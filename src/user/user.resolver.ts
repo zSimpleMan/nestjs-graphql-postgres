@@ -18,7 +18,7 @@ export class UserResolver {
     private userService: UserService,
   ) {}
  
-  // @UseGuards(JwtGraphqlAuth)
+  @UseGuards(JwtGraphqlAuth)
   @Query(() => [User])
   async findUser (
     @Args('filter', { type: () => GraphQLJSON, nullable: true }) where: any,
