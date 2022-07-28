@@ -42,9 +42,7 @@ export class UserService extends BaseService<User> {
     const hashPassword = await bcrypt.hash(data.password, 10)
     data.password = hashPassword
     
-    const row = this.userRepository.create(data)
-
-    await queryRunner.manager.save(row)
+    const row = await super.create(data, queryRunner)
     
     delete row.password
 
@@ -57,11 +55,10 @@ export class UserService extends BaseService<User> {
     })
   }
 
-  async findUser (criterials: any) {
+  async findAll(criterials: any): Promise<User[]> {
     let query = this.userRepository.createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'roles')
-      .leftJoinAndSelect('roles.tests', 'tests')
-      .leftJoinAndSelect('tests.test1s', 'test1s')
+      .leftJoinAndSelect('user.department', 'department')
+      .leftJoinAndSelect('department.company', 'company')
     query = this.queryParser.parser(query, criterials)
 
     const data = await query.getMany()

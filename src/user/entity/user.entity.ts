@@ -9,9 +9,7 @@ import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany
 @ObjectType()
 export class User extends BaseEntity {
   @Field()
-  @Column({
-    primary: true
-  })
+  @PrimaryGeneratedColumn()
   id: number
 
   @Field()
@@ -74,6 +72,12 @@ export class User extends BaseEntity {
   })
   @Column()
   avatar: string
+
+  @Field()
+  @Column({
+    name: 'department_id'
+  })
+  departmentId: number
 
   @Field({
     nullable: true

@@ -1,12 +1,13 @@
 import { Field, ObjectType } from "@nestjs/graphql";
 import { Department } from "src/department/entity/department.entity";
+import { BaseEntity } from "src/shared/base-entity/base.entity";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
   name: 'crm_companies'
 })
 @ObjectType()
-export class Company {
+export class Company extends BaseEntity{
   @Field()
   @PrimaryGeneratedColumn()
   id: number

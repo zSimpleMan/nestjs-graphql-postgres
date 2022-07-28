@@ -21,7 +21,7 @@ export class CreateDepartmentDto {
 
   @Field({ nullable: true })
   @IsOptional()
-  parent_id: number
+  parentId: number
 
   @Field()
   companyId: number

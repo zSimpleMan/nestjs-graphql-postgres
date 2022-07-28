@@ -19,4 +19,7 @@ export class CreateUserDto {
 
   @Field()
   lastName: string
+
+  @Field()
+  departmentId: number
 }

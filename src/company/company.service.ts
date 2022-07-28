@@ -13,12 +13,12 @@ export class CompanyService extends BaseService<Company> {
   }
 
   async findAll(criterials: any): Promise<Company[]> {
-    let query = await this.companyRepository.createQueryBuilder('company')
+    let query = this.companyRepository.createQueryBuilder('company')
       .leftJoinAndSelect('company.departments', 'departments')
     query = this.queryParser.parser(query, criterials)
 
-    const data = await query
+    const data = await query.getMany()
 
-    return data.getMany()
+    return data
   }
 }

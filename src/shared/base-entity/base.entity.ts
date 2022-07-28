@@ -3,35 +3,35 @@ import { Column, Entity, BaseEntity as BaseEntityORM } from "typeorm";
 
 @ObjectType()
 export class BaseEntity extends BaseEntityORM {
-  @Field()
+  @Field({ nullable: true})
   @Column()
   status: number
 
-  @Field()
+  @Field({ nullable: true})
   @Column({
     name: 'created_at'
   })
   createdAt: Date
 
-  @Field()
+  @Field({ nullable: true})
   @Column({
     name: 'modified_at'
   })
   modifiedAt: Date
 
-  @Field()
+  @Field({ nullable: true})
   @Column({
     name: 'created_by'
   })
   createdBy: number
 
-  @Field()
+  @Field({ nullable: true})
   @Column({
     name: 'modified_by'
   })
   modifiedBy: number
 
-  @Field()
+  @Field({ nullable: true})
   @Column({
     name: 'is_deleted'
   })

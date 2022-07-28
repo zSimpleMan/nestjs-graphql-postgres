@@ -2,11 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Role {
+type Company {
+  status: Float
+  createdAt: DateTime
+  modifiedAt: DateTime
+  createdBy: Float
+  modifiedBy: Float
+  isDeleted: Boolean
   id: Float!
-  roleName: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  name: String!
+  phoneNumber: String
+  faxNumber: String
+  email: String
+  address: String
+  website: String
+  smallLogo: String
+  mediumLogo: String
+  largeLogo: String
+  departments: [Department!]!
 }
 
 """
@@ -14,27 +27,102 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type User {
+type Department {
+  status: Float
+  createdAt: DateTime
+  modifiedAt: DateTime
+  createdBy: Float
+  modifiedBy: Float
+  isDeleted: Boolean
   id: Float!
+  name: String!
+  parentId: Float!
+  phoneNumber: String
+  faxNumber: String
+  email: String
+  address: String
+  smallLogo: String
+  mediumLogo: String
+  largeLogo: String
+  companyId: Float!
+  parent: Department
+  childs: [Department!]
+  company: Company
+  users: [User!]
+}
+
+type User {
+  status: Float
+  createdAt: DateTime
+  modifiedAt: DateTime
+  createdBy: Float
+  modifiedBy: Float
+  isDeleted: Boolean
+  id: Float!
+  username: String!
   email: String!
-  password: String!
-  fullName: String!
-  birthday: DateTime!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  roles: [Role!]!
+  firstName: String
+  lastName: String
+  lastLogin: DateTime
+  lastActivity: String
+  lastIp: String
+  avatar: String
+  departmentId: Float!
+  department: Department
+}
+
+type Test1 {
+  id: Float!
+  testId: Float!
+}
+
+type Test {
+  id: Float!
+  roleId: Float!
+  test1s: [Test1!]!
 }
 
 type Query {
-  find(filter: Filter!): [User!]!
+  findUser(filter: JSON, orderBy: JSON): [User!]!
+  findCompany(filter: JSON): [Company!]!
+  findDepartment(filter: JSON): [Department!]!
 }
 
-input Filter {
-  where: [WhereOption!]!
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type Mutation {
+  addNewUser(user: CreateUserDto!): User!
+  addNewCompany(company: CreateCompanyDto!): Company!
+  addNewDepartment(department: CreateDepartmentDto!): Department!
 }
 
-input WhereOption {
-  code: String!
-  operator: String!
-  value: String!
+input CreateUserDto {
+  username: String!
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  departmentId: Float!
+}
+
+input CreateCompanyDto {
+  name: String!
+  phoneNumber: String!
+  faxNumber: String!
+  email: String!
+  address: String!
+  website: String!
+}
+
+input CreateDepartmentDto {
+  name: String!
+  phoneNumber: String!
+  faxNumber: String!
+  email: String!
+  address: String!
+  parentId: Float
+  companyId: Float!
 }

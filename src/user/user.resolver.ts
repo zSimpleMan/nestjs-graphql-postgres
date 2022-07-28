@@ -18,28 +18,21 @@ export class UserResolver {
     private userService: UserService,
   ) {}
  
-  @UseGuards(JwtGraphqlAuth)
+  // @UseGuards(JwtGraphqlAuth)
   @Query(() => [User])
   async findUser (
     @Args('filter', { type: () => GraphQLJSON, nullable: true }) where: any,
     @Args('orderBy', { type: () => GraphQLJSON, nullable: true}) orderBy: any
   ) {
 
-    const data = await this.userService.findUser({ where, orderBy })
+    const data = await this.userService.findAll({ where, orderBy })
 
     return data
   }
 
-  // @Query(() => PaginateModel)
-  // async paginate (@Args('filter') filter: Filter) {
-  //   const data = await this.userService.findOrPaginate(filter)
-
-  //   return data
-  // }
-
   @UseInterceptors(GraphqlTransactionInterceptor)
   @Mutation(() => User)
-  async createUser (@Args('user') user: CreateUserDto, @GraphqlRequestItem('queryRunner') queryRunner: QueryRunner) {
+  async addNewUser (@Args('user') user: CreateUserDto, @GraphqlRequestItem('queryRunner') queryRunner: QueryRunner) {
     return this.userService.create(user, queryRunner)
   }
   

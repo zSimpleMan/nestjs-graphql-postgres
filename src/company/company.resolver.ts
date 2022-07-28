@@ -1,5 +1,6 @@
 import { UseInterceptors } from "@nestjs/common";
 import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
+import GraphQLJSON from "graphql-type-json";
 import { GraphqlTransactionInterceptor } from "src/middlewares/graphql-intercepter";
 import { GraphqlRequestItem } from "src/shared/decorators/request.decorator";
 import { Filter } from "src/user/type/where.type";
@@ -27,9 +28,9 @@ export class CompanyResolver {
 
   @Query(() => [Company])
   async findCompany (
-    @Args('filter') filter: Filter
+    @Args('filter', { type: () => GraphQLJSON, nullable: true }) where: any
   ) {
-    const rs = await this.companyService.findAll(filter)
+    const rs = await this.companyService.findAll({where})
 
     return rs
   }

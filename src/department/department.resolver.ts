@@ -1,5 +1,6 @@
 import { UseInterceptors } from "@nestjs/common";
-import { Args, Mutation, Resolver } from "@nestjs/graphql";
+import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
+import GraphQLJSON from "graphql-type-json";
 import { GraphqlTransactionInterceptor } from "src/middlewares/graphql-intercepter";
 import { GraphqlRequestItem } from "src/shared/decorators/request.decorator";
 import { QueryRunner } from "typeorm";
@@ -21,6 +22,15 @@ export class DepartmentResolver {
   ) {
     const rs = await this.departmentService.create(department, queryRunner)
     
+    return rs
+  }
+
+  @Query(() => [Department])
+  async findDepartment (
+    @Args('filter', { type: () => GraphQLJSON, nullable: true }) where: any
+  ) {
+    const rs = await this.departmentService.findAll({where})
+
     return rs
   }
 }
